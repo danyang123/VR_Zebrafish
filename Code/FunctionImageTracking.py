@@ -21,7 +21,7 @@ from skimage.transform import rotate
 from skimage import img_as_float
 from skimage import img_as_int
 from skimage import exposure
-from skimage.filters import threshold_otsu, threshold_adaptive
+from skimage.filters import threshold_otsu, threshold_local
 
 import matplotlib.cm as cmx
 import matplotlib.colors as colors
@@ -48,9 +48,11 @@ plt.rcParams.update({'font.size': 22})
 
 
 
-def Binarize(img,Offset,SmallSize):
-    bw = threshold_adaptive(img,40, offset=Offset)
-    bw = skimage.morphology.remove_small_objects(1-bw>0,SmallSize)   
+def Binarize(img,Offset):
+    bw = threshold_local(img,39, offset=Offset)
+    #bw = skimage.morphology.remove_small_objects(1-bw>0,SmallSize)   
+    bw1 = skimage.morphology.remove_small_objects((bw-36)>0,50)  
+    bw = skimage.morphology.remove_small_objects(1-bw1>0,2000) 
     se=skimage.morphology.disk(5)
     bw=skimage.morphology.binary_closing(bw,se)
     return bw
@@ -74,7 +76,7 @@ def DrawEllipse(ell,N):
     return xy
 
 def FitEllipse(bw):
-    props=skimage.measure.regionprops(bw==1)
+    props=skimage.measure.regionprops((bw==1)*1)
     props=props[0]
     Y,X=props.coords[:,0],props.coords[:,1]
     return Ellipse(props.centroid[1],props.centroid[0],props.major_axis_length/2.,props.minor_axis_length/2.,-props.orientation)
